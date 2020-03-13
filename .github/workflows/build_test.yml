@@ -1,0 +1,69 @@
+name: Build Tests
+
+on:
+  push:
+    paths-ignore:
+      - ".github/**"
+      - "script/**"
+      - ".git**"
+      - "**.md"
+      - "docs/**"
+      - "**/*.md"
+      - "LICENSE"
+
+jobs:
+
+  build_undergrad:
+    runs-on: ubuntu-latest
+    if: "!contains(github.event.head_commit.message, '[ci skip]')"
+    steps:
+    - name: Checkout Repo
+      uses: actions/checkout@v1
+    - name: Current version
+      run: echo $GITHUB_REF
+    - name: Download Fonts
+      run: ./script/ci/setup.sh
+    - name: Build Test in Docker
+      run: docker run --mount src=$GITHUB_WORKSPACE/,target=/zjuthesis,type=bind adnrv/texlive:full /zjuthesis/script/ci/github-action/build_undergrad.sh
+    - name: Upload Output Files
+      uses: actions/upload-artifact@v1
+      with:
+        name: dist
+        path: dist
+    - name: Upload Log Files
+      uses: actions/upload-artifact@v1
+      with:
+        name: out-ci
+        path: out-ci
+
+  build_grad:
+    runs-on: ubuntu-latest
+    if: "!contains(github.event.head_commit.message, '[ci skip]')"
+    steps:
+    - name: Checkout Repo
+      uses: actions/checkout@v1
+    - name: Current version
+      run: echo $GITHUB_REF
+    - name: Download Fonts
+      run: ./script/ci/setup.sh
+    - name: Build Test in Docker
+      run: docker run --mount src=$GITHUB_WORKSPACE/,target=/zjuthesis,type=bind adnrv/texlive:full /zjuthesis/script/ci/github-action/build_grad.sh
+    - name: Upload Output Files
+      uses: actions/upload-artifact@v1
+      with:
+        name: dist
+        path: dist
+    - name: Upload Log Files
+      uses: actions/upload-artifact@v1
+      with:
+        name: out-ci
+        path: out-ci
+
+  ci_skip:
+    runs-on: [ubuntu-latest]
+    if: "contains(github.event.head_commit.message, '[ci skip]')"
+    steps:
+      - name: Pass on [ci skip]
+        run: echo ci skip by git commit
+      - name: Current version
+        run: echo ${GITHUB_REF}
